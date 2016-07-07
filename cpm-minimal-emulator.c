@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define ED_TRAP_OPCODE	0xBC
 #define CBIOS_JUMP_TABLE_ADDR	0xFE00
@@ -41,32 +42,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #define Z80EX_ED_TRAPPING_SUPPORT
 #define Z80EX_CALLBACK_PROTOTYPE static inline
 
-/* Types, instead of Z80ex's own, we want our SDL ones */
-#include "SDL_types.h"
+
+typedef uint8_t		Uint8;
+typedef int8_t		Sint8;
+typedef uint16_t	Uint16;
+typedef int16_t		Sint16;
+typedef uint32_t	Uint32;
+typedef int32_t		Sint32;
+
+
 #define Z80EX_TYPES_DEFINED
 #define Z80EX_BYTE              Uint8
 #define Z80EX_SIGNED_BYTE       Sint8
 #define Z80EX_WORD              Uint16
 #define Z80EX_DWORD             Uint32
-
-/* Endian related stuffs for Z80ex */
-#include "SDL_endian.h"
-#ifndef SDL_BYTEORDER
-#       error "SDL_BYTEORDER is not defined!"
-#endif
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-#       ifdef Z80EX_WORDS_BIG_ENDIAN
-#               undef Z80EX_WORDS_BIG_ENDIAN
-#       endif
-#       define ENDIAN_GOOD
-#elif SDL_BYTEORDER == SDL_BIG_ENDIAN
-#       ifndef Z80EX_WORDS_BIG_ENDIAN
-#               define Z80EX_WORDS_BIG_ENDIAN
-#       endif
-#       define ENDIAN_UGLY
-#else
-#       error "SDL_BYTEORDER is not SDL_LIL_ENDIAN neither SDL_BIG_ENDIAN"
-#endif
 
 
 #include "z80ex/z80ex.c"
