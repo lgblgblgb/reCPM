@@ -1,20 +1,54 @@
+# re-CPM and XCPM: CP/M re-implementation for Unix/Windows and (later) for 8 bit systems as well
+# Copyright (C)2016 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
+
+ALL_ARCHS	= NATIVE WIN32
+
+CC_NATIVE	= gcc
+CC_WIN32	= i686-w64-mingw32-gcc
+PRG_NATIVE	= xcpm
+PRG_WIN32	= xcpm.exe
+PRG_ALL		= $(PRG_NATIVE) $(PRG_WIN32)
+GENFLAGS_NATIVE	= -Ofast -ffast-math
+GENFLAGS_WIN32	= -Ofast -ffast-math
+CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -Wall -pipe
+CFLAGS_WIN32	= $(GENFLAGS_WIN32)  -Wall -pipe
+LDFLAGS_NATIVE  = $(GENFLAGS_NATIVE)
+LDFLAGS_WIN32	= $(GENFLAGS_WIN32)  -mconsole
+
+OBJPREFIX	= objs/$(ARCH)-
+
+SRCS_COMMON	= xcpm.c
+SRCS_NATIVE	= $(SRCS_COMMON)
+SRCS_WIN32	= $(SRCS_COMMON)
+SRCS		= $(SRCS_$(ARCH))
+
+OBJS		= $(addprefix $(OBJPREFIX), $(SRCS:.c=.o))
+
+
+
 all:
-	true
+	@mkdir -p objs
+	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-build ARCH=$$a ; done
 
-cpm-minimal-emulator.exe:
-	rm -f cpm-minimal-emulator.exe
-	i686-w64-mingw32-gcc -Wall -Ofast -ffast-math -pipe -mconsole -o cpm-minimal-emulator.exe cpm-minimal-emulator.c
-	i686-w64-mingw32-strip cpm-minimal-emulator.exe
-	ls -l cpm-minimal-emulator.exe
+arch-build:
+	@echo "*** Building for $(ARCH) as $(PRG_$(ARCH))"
+	@if [ ! -s .depend.$(ARCH) ]; then $(MAKE) arch-depend ARCH=$(ARCH) ; fi
+	@$(MAKE) $(PRG_$(ARCH)) ARCH=$(ARCH)
 
-cpm-minimal-emulator:
-	rm -f cpm-minimal-emulator
-	gcc -Wall -Ofast -ffast-math -pipe -o cpm-minimal-emulator cpm-minimal-emulator.c
-	strip cpm-minimal-emulator
-	ls -l cpm-minimal-emulator
+arch-depend:
+	$(CC_$(ARCH)) -MM $(CFLAGS_$(ARCH)) $(SRCS) | awk '/^[^.:\t ]+\.o:/ { print "$(OBJPREFIX)" $$0 ; next } { print }' > .depend.$(ARCH)
+
+$(OBJPREFIX)%.o: %.c
+	$(CC_$(ARCH)) $(CFLAGS_$(ARCH)) -c -o $@ $<
+
+$(PRG_$(ARCH)): $(OBJS) Makefile
+	$(CC_$(ARCH)) $(LDFLAGS_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS)
 
 clean:
-	rm -f cpm-minimal-emulator.exe cpm-minimal-emulator
+	rm -f objs/* .depend.* $(PRG_ALL)
 
-.PHONY: test clean all
+.PHONY: test clean all arch-build arch-depend
 
+ifneq ($(wildcard .depend.$(ARCH)),)
+include .depend.$(ARCH)
+endif
