@@ -83,7 +83,7 @@ define Z80EX_WORDS_BIG_ENDIAN before including z80ex in that case).
 # Build instructions for XCPM
 
 Just say 'make'. Note, you need to have gcc and libc development libraries
-installed _ALSO_ with Win32 cross compiler on Linux/UNIX. You also needs
-GNU (!) make utility. If you don't need the Windows build part, you can edit
-Makefile, and line ALL_ARCHS need to be modified to have the only word NATIVE.
+installed _ALSO_ with Win32 and Win64 cross compilers on Linux/UNIX. You also needs
+GNU (!) make utility. If you don't need some build (like win64, win32), you can edit
+Makefile, and line ALL_ARCHS need to be modified to have only the desired architectures.
 
