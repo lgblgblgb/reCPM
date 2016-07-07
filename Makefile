@@ -8,16 +8,16 @@ CC_WIN32	= i686-w64-mingw32-gcc
 PRG_NATIVE	= xcpm
 PRG_WIN32	= xcpm.exe
 PRG_ALL		= $(PRG_NATIVE) $(PRG_WIN32)
-GENFLAGS_NATIVE	= -Ofast -ffast-math
-GENFLAGS_WIN32	= -Ofast -ffast-math
-CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -Wall -pipe
-CFLAGS_WIN32	= $(GENFLAGS_WIN32)  -Wall -pipe
+GENFLAGS_NATIVE	= -Ofast -fno-common -falign-functions=16 -falign-loops=16 -ffast-math
+GENFLAGS_WIN32	= -Ofast -fno-common -falign-functions=16 -falign-loops=16 -ffast-math
+CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -I. -Wall -pipe
+CFLAGS_WIN32	= $(GENFLAGS_WIN32)  -I. -Wall -pipe
 LDFLAGS_NATIVE  = $(GENFLAGS_NATIVE)
 LDFLAGS_WIN32	= $(GENFLAGS_WIN32)  -mconsole
 
 OBJPREFIX	= objs/$(ARCH)-
 
-SRCS_COMMON	= xcpm.c
+SRCS_COMMON	= xcpm.c hardware.c
 SRCS_NATIVE	= $(SRCS_COMMON)
 SRCS_WIN32	= $(SRCS_COMMON)
 SRCS		= $(SRCS_$(ARCH))
@@ -38,7 +38,7 @@ arch-build:
 arch-depend:
 	$(CC_$(ARCH)) -MM $(CFLAGS_$(ARCH)) $(SRCS) | awk '/^[^.:\t ]+\.o:/ { print "$(OBJPREFIX)" $$0 ; next } { print }' > .depend.$(ARCH)
 
-$(OBJPREFIX)%.o: %.c
+$(OBJPREFIX)%.o: %.c Makefile
 	$(CC_$(ARCH)) $(CFLAGS_$(ARCH)) -c -o $@ $<
 
 $(PRG_$(ARCH)): $(OBJS) Makefile

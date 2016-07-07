@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+#include "hardware.h"
 
 #define ED_TRAP_OPCODE	0xBC
 #define CBIOS_JUMP_TABLE_ADDR	0xFE00
@@ -34,41 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #define BDOS_ENTRY_ADDR		0xFD00
 
 
-#define Z80EX_OPSTEP_FAST_AND_ROUGH
-
-
-/* Modified Z80ex features requested */
-//#define Z80EX_Z180_SUPPORT
-#define Z80EX_ED_TRAPPING_SUPPORT
-#define Z80EX_CALLBACK_PROTOTYPE static inline
-
-
-typedef uint8_t		Uint8;
-typedef int8_t		Sint8;
-typedef uint16_t	Uint16;
-typedef int16_t		Sint16;
-typedef uint32_t	Uint32;
-typedef int32_t		Sint32;
-
-
-#define Z80EX_TYPES_DEFINED
-#define Z80EX_BYTE              Uint8
-#define Z80EX_SIGNED_BYTE       Sint8
-#define Z80EX_WORD              Uint16
-#define Z80EX_DWORD             Uint32
-
-
-#include "z80ex/z80ex.c"
-
-
-
-
 #define DEBUG(...) fprintf(stderr, __VA_ARGS__)
 
 
-
-Z80EX_CONTEXT z80ex;
-static Z80EX_BYTE memory[0x10000];
 static Uint16 dma_address = 0x80;
 
 #define MAX_OPEN_FILES 1000
@@ -85,36 +53,6 @@ static struct fcb_st fcb_table[MAX_OPEN_FILES];
 
 
 
-static inline Z80EX_BYTE z80ex_mread_cb(Z80EX_WORD addr, int m1_state) {
-	return memory[addr];
-}
-
-static inline void z80ex_mwrite_cb(Z80EX_WORD addr, Z80EX_BYTE value) {
-	if (addr >= BDOS_ENTRY_ADDR) {
-		DEBUG("CPM: FATAL: someone tried to write system area at address %04Xh PC = %04Xh\n", addr, Z80_PC);
-		exit(1);
-	}
-	if (addr < 0x10) {
-		DEBUG("CPM: warning, someone has just written low-area memory at address %02Xh PC = %04Xh\n", addr, Z80_PC);
-	}
-	memory[addr] = value;
-}
-
-static inline Z80EX_BYTE z80ex_pread_cb(Z80EX_WORD port16) {
-	DEBUG("CPM: warning, someone tried to read I/O port %04Xh at PC = %04Xh\n", port16, Z80_PC);
-	return 0xFF;
-}
-
-static inline void z80ex_pwrite_cb(Z80EX_WORD port16, Z80EX_BYTE value) {
-	DEBUG("CPM: warning, someone tried to write I/O port %04Xh at PC = %04Xh\n", port16, Z80_PC);
-}
-
-static inline Z80EX_BYTE z80ex_intread_cb( void ) {
-	return 0xFF;
-}
-
-static inline void z80ex_reti_cb ( void ) {
-}
 
 
 
