@@ -1,4 +1,3 @@
-sudo: required
 dist: xenial
 
 addons:
@@ -10,7 +9,6 @@ addons:
   - gcc-mingw-w64-x86-64
   - gcc
   - make
-  - awk
 
 language: c
 
