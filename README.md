@@ -1,5 +1,7 @@
 # re-CP/M
 
+[![Build Status](https://travis-ci.org/lgblgblgb/reCPM.svg?branch=master)](https://travis-ci.org/lgblgblgb/reCPM)
+
 (C)2016 Gábor Lénárt (LGB) lgblgblgb@gmail.com
 
 re-CP/M is licensed under the terms of GNU/GPL v2, for more information please
@@ -83,7 +85,8 @@ define Z80EX_WORDS_BIG_ENDIAN before including z80ex in that case).
 # Build instructions for XCPM
 
 Just say 'make'. Note, you need to have gcc and libc development libraries
-installed _ALSO_ with Win32 and Win64 cross compilers on Linux/UNIX. You also needs
-GNU (!) make utility. If you don't need some build (like win64, win32), you can edit
-Makefile, and line ALL_ARCHS need to be modified to have only the desired architectures.
+installed _ALSO_ with Win32 and Win64 cross compilers on Linux/UNIX. You
+also needs GNU (!) make utility. If you don't need some build (like win64,
+win32), you can edit Makefile, and line ALL_ARCHS need to be modified to
+have only the desired architecture(s).
 
