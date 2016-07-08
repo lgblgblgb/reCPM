@@ -1,0 +1,13 @@
+addons:
+ apt:
+  packages:
+  - binutils-mingw-w64-i686
+  - binutils-mingw-w64-x86-64
+  - gcc-mingw-w64-i686
+  - gcc-mingw-w64-x86-64
+  - gcc
+
+language: c
+
+script: make clean && make
+
