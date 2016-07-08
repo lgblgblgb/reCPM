@@ -1,3 +1,5 @@
+dist: xenial
+
 addons:
  apt:
   packages:
@@ -6,6 +8,8 @@ addons:
   - gcc-mingw-w64-i686
   - gcc-mingw-w64-x86-64
   - gcc
+  - make
+  - awk
 
 language: c
 
