@@ -40,12 +40,20 @@ all:
 	@mkdir -p objs
 	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-build ARCH=$$a ; done
 
+dist:
+	$(MAKE) all
+	$(MAKE) strip
+	rm -f xcpm.zip
+	zip xcpm.zip $(PRG_ALL) README.md LICENSE
+	scp xcpm.zip download.lgb.hu:.download.lgb.hu-files/xcpm.zip-`date '+%Y%m%d%H%M%S'`
+
 arch-build:
+	@if [ ! -s .depend.$(ARCH) -o Makefile -nt .depend.$(ARCH) ]; then $(MAKE) arch-depend ARCH=$(ARCH) ; fi
 	@echo "*** Building for $(ARCH) as $(PRG_$(ARCH))"
-	@if [ ! -s .depend.$(ARCH) ]; then $(MAKE) arch-depend ARCH=$(ARCH) ; fi
 	@$(MAKE) $(PRG_$(ARCH)) ARCH=$(ARCH)
 
 arch-depend:
+	@echo "*** Dependency for $(ARCH)"
 	$(CC_$(ARCH)) -MM $(CFLAGS_$(ARCH)) $(SRCS) | awk '/^[^.:\t ]+\.o:/ { print "$(OBJPREFIX)" $$0 ; next } { print }' > .depend.$(ARCH)
 
 arch-strip: $(PRG_$(ARCH))
@@ -58,12 +66,12 @@ $(PRG_$(ARCH)): $(OBJS) Makefile
 	$(CC_$(ARCH)) $(LDFLAGS_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS)
 
 clean:
-	rm -f objs/* .depend.* $(PRG_ALL)
+	rm -f objs/* .depend.* $(PRG_ALL) xcpm.zip
 
 strip:
 	@for a in $(ALL_ARCHS) ; do make arch-strip ARCH=$$a ; done
 
-.PHONY: strip test clean all arch-build arch-depend arch-strip
+.PHONY: strip test clean all arch-build arch-depend arch-strip dist
 
 ifneq ($(wildcard .depend.$(ARCH)),)
 include .depend.$(ARCH)
