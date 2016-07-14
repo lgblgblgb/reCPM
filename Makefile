@@ -45,7 +45,7 @@ dist:
 	$(MAKE) strip
 	rm -f xcpm.zip
 	zip xcpm.zip $(PRG_ALL) README.md LICENSE
-	scp xcpm.zip download.lgb.hu:.download.lgb.hu-files/xcpm.zip-`date '+%Y%m%d%H%M%S'`
+	cat xcpm.zip | ssh download.lgb.hu ".download.lgb.hu-files/pump xcpm.zip-`date '+%Y%m%d%H%M%S'`"
 
 arch-build:
 	@if [ ! -s .depend.$(ARCH) -o Makefile -nt .depend.$(ARCH) ]; then $(MAKE) arch-depend ARCH=$(ARCH) ; fi
