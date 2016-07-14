@@ -1,6 +1,7 @@
 # re-CP/M
 
 [![Build Status](https://travis-ci.org/lgblgblgb/reCPM.svg?branch=master)](https://travis-ci.org/lgblgblgb/reCPM)
+[![Gitter](https://badges.gitter.im/lgblgblgb/reCPM.svg)](https://gitter.im/lgblgblgb/reCPM?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 (C)2016 Gábor Lénárt (LGB) lgblgblgb@gmail.com
 
