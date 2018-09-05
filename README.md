@@ -91,3 +91,17 @@ also needs GNU (!) make utility. If you don't need some build (like win64,
 win32), you can edit Makefile, and line ALL_ARCHS need to be modified to
 have only the desired architecture(s).
 
+If you have a Windows box, you can still build the project, Windows 10
+contains WSL (Windows Subsystem for Linux) which is kinda neat to have
+an (eg) Ubuntu command prompt.
+
+The process (in this example, Debian/Ubuntu, but also the WSL case):
+
+sudo apt-get install git libreadline-dev binutils-mingw-w64-i686 binutils-mingw-w64-x86-64 gcc-mingw-w64-i686 gcc-mingw-w64-x86-64 gcc make
+git clone --depth=1 https://github.com/lgblgblgb/reCPM.git
+cd reCPM
+make
+
+In case of Windows, the exe file (32 or 64 bit version) can be copied
+and used without WSL/Linux as well, of course, just from Windows.
+

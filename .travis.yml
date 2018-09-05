@@ -9,6 +9,8 @@ addons:
   - gcc-mingw-w64-x86-64
   - gcc
   - make
+  - libreadline-dev
+  - git
 
 language: c
 
