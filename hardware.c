@@ -6,7 +6,7 @@
    that is enough for these tools! Maybe this can change in the future, but this is the
    current situation! Stderr should be redirected, as those are DEBUG messages.
 
-   Copyright (C)2016 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
+   Copyright (C)2016,2018 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,15 +29,30 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
 Uint8 memory[0x10000];
 Z80EX_CONTEXT z80ex;
+struct z80ev_st z80ev;
 
 
 
+static inline int z80ex_ed_cb(Z80EX_BYTE opcode) {
+	z80ev.event = Z80_EVENT_ED_TRAP;
+	z80ev.fault_data = opcode;
+	z80ev.fault_pc = (Z80_PC - 2) & 0xFFFF;
+	z80ev.fault_addr = z80ev.fault_pc;
+	return 0;
+}
 
 static inline Z80EX_BYTE z80ex_mread_cb(Z80EX_WORD addr, int m1_state) {
 	return memory[addr];
 }
 
 static inline void z80ex_mwrite_cb(Z80EX_WORD addr, Z80EX_BYTE value) {
+	if (addr > z80ev.user_mem_last_byte || addr < z80ev.user_mem_first_byte) {
+		z80ev.event = Z80_EVENT_MPROTECT;
+		z80ev.fault_data = value;
+		z80ev.fault_pc = Z80_PC;
+		z80ev.fault_addr = addr;
+	} else
+		memory[addr] = value;
 #if 0
 	if (addr >= BDOS_ENTRY_ADDR) {
 		DEBUG("CPM: FATAL: someone tried to write system area at address %04Xh PC = %04Xh\n", addr, Z80_PC);
@@ -47,7 +62,6 @@ static inline void z80ex_mwrite_cb(Z80EX_WORD addr, Z80EX_BYTE value) {
 		DEBUG("CPM: warning, someone has just written low-area memory at address %02Xh PC = %04Xh\n", addr, Z80_PC);
 	}
 #endif
-	memory[addr] = value;
 }
 
 static inline Z80EX_BYTE z80ex_pread_cb(Z80EX_WORD port16) {

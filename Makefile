@@ -1,5 +1,5 @@
 # re-CPM and XCPM: CP/M re-implementation for Unix/Windows and (later) for 8 bit systems as well
-# Copyright (C)2016 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
+# Copyright (C)2016,2018 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
 
 ALL_ARCHS	= NATIVE WIN32 WIN64
 
@@ -29,7 +29,7 @@ LDFLAGS_WIN64	= $(GENFLAGS_WIN64)  -mconsole
 
 OBJPREFIX	= objs/$(ARCH)-
 
-SRCS_COMMON	= xcpm.c hardware.c shell.c
+SRCS_COMMON	= xcpm.c hardware.c shell.c exec.c cpm.c
 SRCS_NATIVE	= $(SRCS_COMMON)
 SRCS_WIN32	= $(SRCS_COMMON)
 SRCS_WIN64	= $(SRCS_COMMON)
@@ -40,7 +40,6 @@ OBJS		= $(addprefix $(OBJPREFIX), $(SRCS:.c=.o))
 
 
 all:
-	@mkdir -p objs
 	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-build ARCH=$$a || exit 1 ; done
 
 dist:
@@ -49,6 +48,9 @@ dist:
 	rm -f xcpm.zip
 	zip xcpm.zip $(PRG_ALL) README.md LICENSE
 	cat xcpm.zip | ssh download.lgb.hu ".download.lgb.hu-files/pump xcpm.zip-`date '+%Y%m%d%H%M%S'`"
+
+dep:
+	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-depend ARCH=$$a || exit 1 ; done
 
 arch-build:
 	@if [ ! -s objs/$(ARCH).depend -o Makefile -nt objs/$(ARCH).depend ]; then $(MAKE) arch-depend ARCH=$(ARCH) || exit 1 ; fi
@@ -69,12 +71,12 @@ $(PRG_$(ARCH)): $(OBJS) Makefile
 	$(CC_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS) $(LDFLAGS_$(ARCH))
 
 clean:
-	rm -f objs/* $(PRG_ALL) xcpm.zip
+	rm -f objs/*.* $(PRG_ALL) xcpm.zip
 
 strip:
 	@for a in $(ALL_ARCHS) ; do make arch-strip ARCH=$$a || exit 1 ; done
 
-.PHONY: strip test clean all arch-build arch-depend arch-strip dist
+.PHONY: strip test clean all arch-build arch-depend arch-strip dist dep
 
 ifneq ($(wildcard objs/$(ARCH).depend),)
 include objs/$(ARCH).depend

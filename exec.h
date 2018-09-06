@@ -22,36 +22,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-#ifndef __XCPM_HARDWARE_H_INCLUDED
-#define __XCPM_HARDWARE_H_INCLUDED
+#ifndef __XCPM_EXEC_H_INCLUDED
+#define __XCPM_EXEC_H_INCLUDED
 
-#include "common.h"
+extern int  cpmprg_z80_execute ( void );
+extern int  CPMPRG_STOP ( int code, const char *format, ... );
+extern int  cpmprg_load_and_execute ( const char *hostospath, int argc, char **argv );
+extern void show_termination_error ( FILE *stream );
 
-#define Z80EX_OPSTEP_FAST_AND_ROUGH
-#define Z80EX_ED_TRAPPING_SUPPORT
-//#define Z80EX_CALLBACK_PROTOTYPE
-
-#define Z80EX_TYPES_DEFINED
-#define Z80EX_BYTE              Uint8
-#define Z80EX_SIGNED_BYTE       Sint8
-#define Z80EX_WORD              Uint16
-#define Z80EX_DWORD             Uint32
-
-#define Z80_EVENT_ED_TRAP	1
-#define Z80_EVENT_MPROTECT	2
-#define Z80_EVENT_TICK		3
-#define Z80_EVENT_SHUTDOWN	4
-
-struct z80ev_st {
-	int event;
-	int fault_data, fault_addr, fault_pc;
-	int user_mem_first_byte, user_mem_last_byte;
-};
-extern struct z80ev_st z80ev;
-
-#include "z80ex/z80ex.h"
-
-extern Z80EX_CONTEXT z80ex;
-extern Uint8 memory[0x10000];
 
 #endif

@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "z80ex.h"
-#include "macros.h"
+#include "z80ex/z80ex.h"
+#include "z80ex/macros.h"
 
 #define temp_byte z80ex.tmpbyte
 #define temp_byte_s z80ex.tmpbyte_s
@@ -23,15 +23,15 @@
 
 typedef void (*z80ex_opcode_fn) (void);
 
-#include "ptables.c"
-#include "opcodes_base.c"
-#include "opcodes_dd.c"
-#include "opcodes_fd.c"
-#include "opcodes_cb.c"
-#include "opcodes_ed.c"
-#include "opcodes_ddcb.c"
-#include "opcodes_fdcb.c"
-#include "z180ex.c"
+#include "z80ex/ptables.c"
+#include "z80ex/opcodes_base.c"
+#include "z80ex/opcodes_dd.c"
+#include "z80ex/opcodes_fd.c"
+#include "z80ex/opcodes_cb.c"
+#include "z80ex/opcodes_ed.c"
+#include "z80ex/opcodes_ddcb.c"
+#include "z80ex/opcodes_fdcb.c"
+#include "z80ex/z180ex.c"
 
 /* do one opcode (instruction or prefix) */
 int z80ex_step(void)
