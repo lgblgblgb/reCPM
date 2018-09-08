@@ -33,6 +33,8 @@
 *.su
 
 # My stuff
-/xcpm
+*.swp
+*~
+/recpm
 /objs/*.*
-/xcpm.zip
+/recpm.zip

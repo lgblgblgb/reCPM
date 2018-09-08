@@ -22,8 +22,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-#ifndef __XCPM_HARDWARE_H_INCLUDED
-#define __XCPM_HARDWARE_H_INCLUDED
+#ifndef __RECPM_HARDWARE_H_INCLUDED
+#define __RECPM_HARDWARE_H_INCLUDED
 
 #include "common.h"
 

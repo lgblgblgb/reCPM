@@ -27,10 +27,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <errno.h>
 #include "common.h"
 #include "hardware.h"
 #include "cpm.h"
 #include "exec.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 
 
@@ -47,8 +52,63 @@ struct fcb_st {
 static struct fcb_st fcb_table[MAX_OPEN_FILES];
 
 
+struct cpm_drive_st cpm_drives[CPM_DRIVES_MAX];
+int current_cpm_drive = 0;
+
+char cpm_last_errmsg[1024];
+
+#define SET_ERRMSG(...)	snprintf(cpm_last_errmsg, sizeof cpm_last_errmsg, __VA_ARGS__)
 
 
+
+int cpm_drive_logon ( int drive, const char *host_path )
+{
+	if (drive < 0 || drive >= CPM_DRIVES_MAX) {
+		SET_ERRMSG("%s: Invalid drive requested: #%d", __func__, drive);
+		return -1;
+	}
+	if (cpm_drives[drive].host_path[0]) {
+		if (chdir(cpm_drives[drive].host_path)) {
+			SET_ERRMSG("%s: cannot pre-chdir(): %s", __func__, strerror(errno));
+			return -1;
+		}
+	}
+	char resolved_path[PATH_MAX];
+	if (
+#ifdef _WIN32
+		GetFullPathName(host_path, PATH_MAX, resolved_path, NULL)
+#else
+		realpath(host_path, resolved_path)
+#endif
+		&& !chdir(resolved_path)
+	) {
+		strcpy(cpm_drives[drive].host_path, resolved_path);
+		int pathsize = strlen(cpm_drives[drive].host_path);
+		if (cpm_drives[drive].host_path[pathsize - 1] != DIRSEPCHR)
+			strcpy(cpm_drives[drive].host_path + pathsize, DIRSEPSTR);
+		cpm_drives[drive].read_only = 0;
+		//show_drive_assignment(drive);
+		//printf("Drive %c: logged on to %s\n", drive + 'A', resolved_path);
+		return 0;
+	}
+	SET_ERRMSG("%s: failure with path resolution or using it: %s", __func__, strerror(errno));
+	return -1;
+}
+
+
+int cpm_select_drive ( int drive )
+{
+	if (drive < 0 || drive >= CPM_DRIVES_MAX) {
+		SET_ERRMSG("Invalid drive #%d to set", drive);
+		return -1;
+	}
+	if (!cpm_drives[drive].host_path[0]) {
+		SET_ERRMSG("Not-logged on drive (#%d %c:) cannot be set as default", drive, drive + 'A');
+		return -1;
+	}
+	current_cpm_drive = drive;
+	return 0;
+}
 
 
 
@@ -72,11 +132,17 @@ void write_filename_to_fcb ( Uint16 fcb_addr, const char *fn )
 
 
 /* Intitialize CP/M C implementation */
-int cpm_init ( void  )
+int recpm_init ( void  )
 {
+	for (int a = 0; a < CPM_DRIVES_MAX; a++) {
+		cpm_drives[a].host_path[0] = '\0';
+		cpm_drives[a].read_only = 0;
+	}
 	/* Our ugly FCB to host file handle table ... */
 	for (int a = 0; a < MAX_OPEN_FILES; a++)
 		fcb_table[a].addr = -1;
+	cpm_last_errmsg[0] = '\0';
+	dma_address = 0x100;
 	return 0;
 }
 
@@ -184,8 +250,8 @@ static int bdos_open_file ( Uint16 fcb_addr, int is_create )
 		f = fopen(fn, "rb");
 		if (f) {
 			fclose(f);
-			DEBUG("CPM: FATAL: FILE CREATE FUNC, but file %s existed before, stopping!\n", fn);
-			exit(1);
+			CPMPRG_STOP(1, "BDOS FILE CREATE FUNC: file %s already exists.", fn);
+			return 1;
 		}
 		f = fopen(fn, "w+b");
 	} else
@@ -376,8 +442,7 @@ void cpm_bdos_syscall ( int func )
 			Z80_A = Z80_L = bdos_random_access_read_record(Z80_DE);
 			break;
 		default:
-			DEBUG("CPM: BDOS: FATAL: unsupported call %d\n", func);
-			exit(1);
+			CPMPRG_STOP(-1, "Unimplemented BDOS call #%d", func);
+			break;
 	}
 }
-

@@ -1,4 +1,4 @@
-# re-CPM and XCPM: CP/M re-implementation for Unix/Windows and (later) for 8 bit systems as well
+# re-CPM (formerly 'XCPM'): CP/M re-implementation for Unix/Windows and (later) for 8 bit systems as well
 # Copyright (C)2016,2018 LGB (Gábor Lénárt) <lgblgblgb@gmail.com>
 
 ALL_ARCHS	= NATIVE WIN32 WIN64
@@ -12,15 +12,15 @@ STRIP_WIN64	= x86_64-w64-mingw32-strip
 
 DATECODE	= $(shell date '+%Y%m%d%H%M')
 
-PRG_NATIVE	= xcpm
-PRG_WIN32	= xcpm.exe
-PRG_WIN64	= xcpm_64.exe
+PRG_NATIVE	= recpm
+PRG_WIN32	= recpm.exe
+PRG_WIN64	= recpm_64.exe
 PRG_ALL		= $(PRG_NATIVE) $(PRG_WIN32) $(PRG_WIN64)
 GENFLAGS_COMMON	= -std=gnu11 -Ofast -fno-common -falign-functions=16 -falign-loops=16 -ffast-math -DDATECODE=\"$(DATECODE)\"
 GENFLAGS_NATIVE	= $(GENFLAGS_COMMON)
 GENFLAGS_WIN32	= $(GENFLAGS_COMMON)
 GENFLAGS_WIN64	= $(GENFLAGS_COMMON)
-CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -I. -Wall -pipe
+CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -I. -Wall -pipe -g
 CFLAGS_WIN32	= $(GENFLAGS_WIN32)  -I. -Wall -pipe
 CFLAGS_WIN64	= $(GENFLAGS_WIN64)  -I. -Wall -pipe
 LDFLAGS_NATIVE  = $(GENFLAGS_NATIVE) -lreadline
@@ -29,7 +29,7 @@ LDFLAGS_WIN64	= $(GENFLAGS_WIN64)  -mconsole
 
 OBJPREFIX	= objs/$(ARCH)-
 
-SRCS_COMMON	= xcpm.c hardware.c shell.c exec.c cpm.c
+SRCS_COMMON	= main.c hardware.c shell.c exec.c cpm.c
 SRCS_NATIVE	= $(SRCS_COMMON)
 SRCS_WIN32	= $(SRCS_COMMON)
 SRCS_WIN64	= $(SRCS_COMMON)
@@ -38,16 +38,15 @@ SRCS		= $(SRCS_$(ARCH))
 OBJS		= $(addprefix $(OBJPREFIX), $(SRCS:.c=.o))
 
 
-
 all:
 	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-build ARCH=$$a || exit 1 ; done
 
 dist:
 	$(MAKE) all
 	$(MAKE) strip
-	rm -f xcpm.zip
-	zip xcpm.zip $(PRG_ALL) README.md LICENSE
-	cat xcpm.zip | ssh download.lgb.hu ".download.lgb.hu-files/pump xcpm.zip-`date '+%Y%m%d%H%M%S'`"
+	rm -f recpm.zip
+	zip recpm.zip $(PRG_ALL) README.md LICENSE
+	cat recpm.zip | ssh download.lgb.hu ".download.lgb.hu-files/pump recpm.zip-`date '+%Y%m%d%H%M%S'`"
 
 dep:
 	@for a in $(ALL_ARCHS) ; do $(MAKE) arch-depend ARCH=$$a || exit 1 ; done
@@ -67,14 +66,20 @@ arch-strip: $(PRG_$(ARCH))
 $(OBJPREFIX)%.o: %.c Makefile
 	$(CC_$(ARCH)) $(CFLAGS_$(ARCH)) -c -o $@ $<
 
-$(PRG_$(ARCH)): $(OBJS) Makefile
-	$(CC_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS) $(LDFLAGS_$(ARCH))
+$(PRG_$(ARCH)): $(OBJS) objs/$(ARCH)-HELP_TXTDB.o Makefile
+	$(CC_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS) objs/$(ARCH)-HELP_TXTDB.o $(LDFLAGS_$(ARCH))
 
 clean:
-	rm -f objs/*.* $(PRG_ALL) xcpm.zip
+	rm -f objs/*.* $(PRG_ALL) recpm.zip
 
 strip:
 	@for a in $(ALL_ARCHS) ; do make arch-strip ARCH=$$a || exit 1 ; done
+
+objs/HELP.c: help/*.md ./help Makefile
+	cat help/*.md | sed 's/^#\s*/#/;s/\\/\\\\/g;s/"/\\"/g;s/^/\"/;s/\s*$$/\\n\"/;1s/^/const char help_md[] = \"\\n\"\n/;$$s/$$/;/' > $@
+
+objs/$(ARCH)-HELP_TXTDB.o: objs/HELP.c Makefile
+	$(CC_$(ARCH)) $(CFLAGS_$(ARCH)) -c -o $@ $<
 
 .PHONY: strip test clean all arch-build arch-depend arch-strip dist dep
 

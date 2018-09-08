@@ -22,12 +22,27 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-#ifndef __XCPM_CPM_H_INCLUDED
-#define __XCPM_CPM_H_INCLUDED
+#ifndef __RECPM_CPM_H_INCLUDED
+#define __RECPM_CPM_H_INCLUDED
 
-extern int  cpm_init ( void );
+#include <limits.h>
+
+#define CPM_DRIVES_MAX 16
+
+struct cpm_drive_st {
+    char host_path[PATH_MAX];
+    int read_only;
+};
+
+extern struct cpm_drive_st cpm_drives[CPM_DRIVES_MAX];
+extern int current_cpm_drive;
+extern char cpm_last_errmsg[];
+
+extern int  recpm_init ( void );
 extern void cpm_bios_syscall ( int func );
 extern void cpm_bdos_syscall ( int func );
 extern void write_filename_to_fcb ( Uint16 fcb_addr, const char *fn );
+extern int  cpm_drive_logon ( int drive, const char *host_path );
+extern int  cpm_select_drive ( int drive );
 
 #endif

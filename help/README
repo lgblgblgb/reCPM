@@ -1,0 +1,13 @@
+This directory contains buch of files, which are basically MD (markdown) format.
+However, please note, that the intent of these files, to be built into the
+reCPM executables, to implement a crude internal CLI help system. Thus, these
+files have quite rigid format, restricted within the MD format capabilities.
+Be careful if you plan to modify any. The Makefile mechanism will convert the
+*.md files in this directory into C string, which will be compiled into the
+binary directly. Maybe you can argue, how lame this method is. But the truth,
+that reCPM wants to be a single-executable extra easy to deply quick little
+solution. This method to embbed help is indeed ugly, and searching in it is
+not the fastest method, but we don't need hundred of megabytes of documentation
+here anyway ...
+
+

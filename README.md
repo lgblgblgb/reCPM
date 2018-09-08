@@ -43,15 +43,14 @@ find 8080 asm syntax a bit hmmmm "strange".
 # Planned targets
 
 * Linux/UNIX and Windows, code in C, Z80 is emulated with Z80ex (though
-  traditionally, 8080 is "enough" for CP/M). This target and the emulator
-  is also named as "XCPM".
+  traditionally, 8080 is "enough" for CP/M).
 
   This target is great way to test CP/M emulation easily while also providing
   CP/M-alike features for modern operating systems. It would be much harder to
   try/test new CP/M implementation coded in assembly for 8 bit systems first.
 
   A CCP replacement with some "built-in" commands are also planned, but
-  basically (without this feature used) XCPM is suitable to invoke a CP/M
+  basically (without this feature used) reCPM is suitable to invoke a CP/M
   command with the ability to redirect stdin/stdout as it would be a native
   program running on your OS.
 
@@ -79,11 +78,11 @@ Since CP/M 2.2 does not know about "directories", the system mostly uses a
 single directory. Though the planned CCP will provide some commands to change
 the current directory etc for more comfortable use.
 
-XCPM currently assumes little endian host CPU byte order, that is x86 for
+reCPM currently assumes little endian host CPU byte order, that is x86 for
 example. It won't work in this form on a CPU with other byte order (you should
 define Z80EX_WORDS_BIG_ENDIAN before including z80ex in that case).
 
-# Build instructions for XCPM
+# Build instructions for reCPM
 
 Just say 'make'. Note, you need to have gcc and libc development libraries
 installed _ALSO_ with Win32 and Win64 cross compilers on Linux/UNIX. You also
@@ -103,5 +102,6 @@ The process (in this example, Debian/Ubuntu, but also the WSL case):
     make
 
 In case of Windows, the exe file (32 or 64 bit version) can be copied and used
-without WSL/Linux as well, of course, just from Windows.
+without WSL/Linux as well, of course, just from Windows. Linux is only needed
+to compile.
 

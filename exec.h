@@ -22,12 +22,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-#ifndef __XCPM_EXEC_H_INCLUDED
-#define __XCPM_EXEC_H_INCLUDED
+#ifndef __RECPM_EXEC_H_INCLUDED
+#define __RECPM_EXEC_H_INCLUDED
 
 extern int  cpmprg_z80_execute ( void );
 extern int  CPMPRG_STOP ( int code, const char *format, ... );
-extern int  cpmprg_load_and_execute ( const char *hostospath, int argc, char **argv );
+extern int  cpmprg_load ( const char *hostospath, int argc, char **argv );
+extern int  cpmprg_execute ( void );
 extern void show_termination_error ( FILE *stream );
 
 

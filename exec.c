@@ -241,7 +241,7 @@ int cpmprg_prepare_psp ( int argc, char **argv )
 
 
 
-int cpmprg_load_and_execute ( const char *hostospath, int argc, char **argv )
+int cpmprg_load ( const char *hostospath, int argc, char **argv )
 {
 	cpm_memory_initialize();
 	int fd = open(hostospath, O_RDONLY | O_BINARY);
@@ -258,10 +258,15 @@ int cpmprg_load_and_execute ( const char *hostospath, int argc, char **argv )
 		return CPMPRG_STOP(1, "Too large CP/M program file");
 	if ((size = cpmprg_prepare_psp(argc, argv)))
 		return size;
+	return 0;
+}
+
+
+int cpmprg_execute ( void )
+{
 	cpmprg_z80_reset();
 	return cpmprg_z80_execute();
 }
-
 
 
 

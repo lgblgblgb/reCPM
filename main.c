@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include "common.h"
 #include "hardware.h"
 #include "shell.h"
@@ -34,20 +32,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include "exec.h"
 
 
-
-
+#include <limits.h>
+#include <libgen.h>
 
 
 
 int main ( int argc, char **argv )
 {
 	z80ex_init();
-	cpm_init();
-	if (argc < 2)
+	recpm_init();
+	console_init();
+	if (argc < 2) {
+		console_title("[SHELL]");
 		return shell_main();
-	else {
-		int ret = cpmprg_load_and_execute(argv[1], argc - 2, argv + 2);
-		show_termination_error(stderr);
+	} else {
+		char pathinfo[PATH_MAX];
+		strcpy(pathinfo, argv[1]);
+		char *dir = dirname(pathinfo);
+		int ret = cpmprg_load(argv[1], argc - 2, argv + 2);
+		if (ret) {
+			show_termination_error(stderr);
+			return ret;
+		}
+		if (cpm_drive_logon(0, dir)) {
+			fprintf(stderr, "Cannot logon A: to %s: %s\n", dir, cpm_last_errmsg);
+			return -1;
+		}
+		console_title("USERPRG");
+		ret = cpmprg_execute();
+		if (ret)
+			show_termination_error(stderr);
 		return ret;
 	}
 }

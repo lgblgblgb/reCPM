@@ -22,8 +22,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-#ifndef __XCPM_COMMON_H_INCLUDED
-#define __XCPM_COMMON_H_INCLUDED
+#ifndef __RECPM_COMMON_H_INCLUDED
+#define __RECPM_COMMON_H_INCLUDED
 
 #include <stdint.h>
 
@@ -34,9 +34,15 @@ typedef int16_t         Sint16;
 typedef uint32_t        Uint32;
 typedef int32_t         Sint32;
 
-#ifndef _WIN32
-#define O_BINARY 0
+#ifdef _WIN32
+#define DIRSEPCHR '\\'
+#define DIRSEPSTR "\\"
+#else
+#define DIRSEPCHR '/'
+#define DIRSEPSTR "/"
+#define O_BINARY  0
 #endif
+
 
 #ifdef __GNUC__
 #	define LIKELY(__x__)	__builtin_expect(!!(__x__), 1)
