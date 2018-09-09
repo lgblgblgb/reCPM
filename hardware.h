@@ -54,4 +54,6 @@ extern struct z80ev_st z80ev;
 extern Z80EX_CONTEXT z80ex;
 extern Uint8 memory[0x10000];
 
+extern int z80_custom_disasm ( int addr, char *buf, int buf_size );
+
 #endif

@@ -41,7 +41,7 @@ static inline int z80ex_ed_cb(Z80EX_BYTE opcode) {
 	return 0;
 }
 
-static inline Z80EX_BYTE z80ex_mread_cb(Z80EX_WORD addr, int m1_state) {
+static INLINE Z80EX_BYTE z80ex_mread_cb(Z80EX_WORD addr, int m1_state) {
 	return memory[addr];
 }
 
@@ -81,4 +81,21 @@ static inline void z80ex_reti_cb ( void ) {
 }
 
 #include "z80ex/z80ex.c"
+#include "z80ex/z80ex_dasm.c"
 
+static Z80EX_BYTE disasm_mreader ( Z80EX_WORD addr )
+{
+	return z80ex_mread_cb(addr, 0);
+}
+
+int z80_custom_disasm ( int addr, char *buf, int buf_size )
+{
+	int t1, t2;
+	char o_head[256];
+	char o_dasm[256];
+	int oplen = z80ex_dasm(o_dasm, sizeof o_dasm, 0, &t1, &t2, disasm_mreader, addr & 0xFFFF);
+	for (int a = 0; a < oplen; a++)
+		sprintf(o_head + a * 3, "%02X ", disasm_mreader(addr + a));
+	snprintf(buf, buf_size, "%04X %-12s %s", addr, o_head, o_dasm);
+	return oplen;
+}

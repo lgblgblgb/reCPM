@@ -35,11 +35,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include <limits.h>
 #include <libgen.h>
 
+#include <signal.h>
+
+
+static void sighandler ( int signum )
+{
+	printf("CTRL-C\n");
+	CPMPRG_STOP(0, "CTRL-C pressed.");
+}
+
 
 
 int main ( int argc, char **argv )
 {
 	z80ex_init();
+	cpmprg_memory_initialize();	// not needed, but nice, if MDUMP shell command shows something before any CP/M program run ...
 	recpm_init();
 	console_init();
 	if (argc < 2) {
@@ -58,7 +68,9 @@ int main ( int argc, char **argv )
 			fprintf(stderr, "Cannot logon A: to %s: %s\n", dir, cpm_last_errmsg);
 			return -1;
 		}
-		console_title("USERPRG");
+		strcpy(pathinfo, argv[1]);
+		console_title(basename(pathinfo));
+		signal(SIGINT, sighandler);
 		ret = cpmprg_execute();
 		if (ret)
 			show_termination_error(stderr);

@@ -20,7 +20,7 @@ GENFLAGS_COMMON	= -std=gnu11 -Ofast -fno-common -falign-functions=16 -falign-loo
 GENFLAGS_NATIVE	= $(GENFLAGS_COMMON)
 GENFLAGS_WIN32	= $(GENFLAGS_COMMON)
 GENFLAGS_WIN64	= $(GENFLAGS_COMMON)
-CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -I. -Wall -pipe -g
+CFLAGS_NATIVE	= $(GENFLAGS_NATIVE) -I. -Wall -pipe
 CFLAGS_WIN32	= $(GENFLAGS_WIN32)  -I. -Wall -pipe
 CFLAGS_WIN64	= $(GENFLAGS_WIN64)  -I. -Wall -pipe
 LDFLAGS_NATIVE  = $(GENFLAGS_NATIVE) -lreadline
@@ -70,12 +70,14 @@ $(PRG_$(ARCH)): $(OBJS) objs/$(ARCH)-HELP_TXTDB.o Makefile
 	$(CC_$(ARCH)) -o $(PRG_$(ARCH)) $(OBJS) objs/$(ARCH)-HELP_TXTDB.o $(LDFLAGS_$(ARCH))
 
 clean:
-	rm -f objs/*.* $(PRG_ALL) recpm.zip
+	rm -f objs/*.* $(PRG_ALL) recpm.zip help/LICENSE.md
 
 strip:
 	@for a in $(ALL_ARCHS) ; do make arch-strip ARCH=$$a || exit 1 ; done
 
-objs/HELP.c: help/*.md ./help Makefile
+objs/HELP.c: help/*.md ./help LICENSE Makefile
+	echo -e "# LICENSE\nSoftware license of re-CP/M\n" > help/LICENSE.md
+	cat LICENSE >> help/LICENSE.md
 	cat help/*.md | sed 's/^#\s*/#/;s/\\/\\\\/g;s/"/\\"/g;s/^/\"/;s/\s*$$/\\n\"/;1s/^/const char help_md[] = \"\\n\"\n/;$$s/$$/;/' > $@
 
 objs/$(ARCH)-HELP_TXTDB.o: objs/HELP.c Makefile

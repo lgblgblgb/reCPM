@@ -30,6 +30,6 @@ extern int  CPMPRG_STOP ( int code, const char *format, ... );
 extern int  cpmprg_load ( const char *hostospath, int argc, char **argv );
 extern int  cpmprg_execute ( void );
 extern void show_termination_error ( FILE *stream );
-
+extern void cpmprg_memory_initialize ( void );
 
 #endif

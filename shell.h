@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #ifndef __RECPM_SHELL_H_INCLUDED
 #define __RECPM_SHELL_H_INCLUDED
 
+extern int stdin_is_tty, stdout_is_tty;
+
 extern int console_title ( const char *name );
 extern int console_init ( void );
 extern int shell_main ( void );

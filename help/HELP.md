@@ -1,4 +1,4 @@
-#HELP
+# HELP
 Built-in HELP viewer of reCPM.
 
 Usage:

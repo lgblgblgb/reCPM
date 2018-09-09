@@ -40,21 +40,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 #include "common.h"
 #include "shell.h"
 #include "cpm.h"
+#include "hardware.h"
 
 
 static int shell_exit_request;
-
-
+int stdin_is_tty = 0;
+int stdout_is_tty = 0;
 
 extern const char help_md[];
 
 
 
 
-
-
-
-
+static void show_version ( void )
+{
+#ifndef _WIN32
+	struct utsname uts;
+	uname(&uts);
+	printf("re-CP/M " DATECODE " running on %s %s %s \"%s\"\n",
+		uts.sysname, uts.release, uts.machine, uts.nodename
+	);
+#else
+	DWORD winver = GetVersion();
+	char nodename[100];
+	DWORD nodesize = sizeof(nodename) - 1;
+	printf("re-CP/M v%s running on Windows %d.%d #%d %s \"%s\"\n",
+		DATECODE,
+		LOBYTE(LOWORD(winver)),
+		HIBYTE(LOWORD(winver)),
+		(winver < 0x80000000) ? HIWORD(winver) : 0,
+#ifdef _WIN64
+		"x86_64",
+#else
+		"x86_32",
+#endif
+		GetComputerName(nodename, &nodesize) ? "unknown-host" : nodename
+	);
+	//IsWow64Process
+#endif
+	printf(
+		"(C)2016,2018 LGB Gabor Lenart - https://github.com/lgblgblgb/reCPM\n"
+		"This is a GNU/GPL software, type HELP LICENSE for more information.\n"
+		"CP/M desired compatibility level v2.2\n"
+	);
+}
 
 
 static void strcapitalize ( char *dst, const char *src, int bufsize )
@@ -65,10 +94,6 @@ static void strcapitalize ( char *dst, const char *src, int bufsize )
 	}
 	*dst = '\0';
 }
-
-
-
-
 
 
 static int tokenizer ( char *line, const int max_tokens, char **tokens, const char *comment_signs )
@@ -173,6 +198,78 @@ static int shellcmd_dir ( const char **tokens, int num_tokens, const char *orig_
 }
 
 
+static int string2hexword ( const char *s )
+{
+	char *endptr;
+	long int addr = strtol(s, &endptr, 16);
+	return (*endptr || addr < 0 || addr > 0xFFFF) ? -1 : addr & 0xFFFF;
+}
+
+
+
+
+static int shellcmd_mdump ( const char **tokens, int num_tokens, const char *orig_line )
+{
+	static int addr = 0x100;
+	if (num_tokens) {
+		int new_addr = string2hexword(tokens[0]);
+		if (new_addr < 0) {
+			printf("Invalid hex address to dump from\n");
+			return 1;
+		} else
+			addr = new_addr;
+	}
+	char s[100];
+	memset(s, 0, sizeof s);
+	for (int line = 0; line < 16; line++) {
+#		define ZBYTE(a) memory[(addr + (a)) & 0xFFFF]
+#		define ZCHAR(a) ((ZBYTE(a) >= 0x20 && ZBYTE(a) < 127) ? ZBYTE(a) : '.')
+		printf("%04X  %02X %02X %02X %02X %02X %02X %02X %02X-%02X %02X %02X %02X %02X %02X %02X %02X  %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n",
+			addr,
+			ZBYTE(0), ZBYTE(1), ZBYTE(2), ZBYTE(3), ZBYTE(4), ZBYTE(5), ZBYTE(6), ZBYTE(7),
+			ZBYTE(8), ZBYTE(9), ZBYTE(10), ZBYTE(11), ZBYTE(12), ZBYTE(13), ZBYTE(14), ZBYTE(15),
+			ZCHAR(0), ZCHAR(1), ZCHAR(2), ZCHAR(3), ZCHAR(4), ZCHAR(5), ZCHAR(6), ZCHAR(7),
+			ZCHAR(8), ZCHAR(9), ZCHAR(10), ZCHAR(11), ZCHAR(12), ZCHAR(13), ZCHAR(15), ZCHAR(15)
+		);
+#		undef ZCHAR
+#		undef ZBYTE
+		addr = (addr + 0x10) & 0xFFFF;
+	}
+	return 0;
+}
+
+
+
+static int shellcmd_dasm ( const char **tokens, int num_tokens, const char *orig_line )
+{
+	static int addr = 0x100;
+	if (num_tokens) {
+		int new_addr = string2hexword(tokens[0]);
+		if (new_addr < 0) {
+			printf("Invalid hex address to dump from\n");
+			return 1;
+		} else
+			addr = new_addr;
+	}
+	int lines = 20;
+	while (lines--) {
+		char buf[256];
+		addr = (addr + z80_custom_disasm(addr, buf, sizeof buf)) & 0xFFFF;
+		printf("%s\n", buf);
+	}
+	return 0;
+}
+
+
+static int shellcmd_ver ( const char **tokens, int num_tokens, const char *orig_line )
+{
+	show_version();
+	return 0;
+}
+
+
+
+
 struct shell_command_list_entry_st {
 	const char *command_name;
 	int (*exec)(const char **, int, const char *);
@@ -185,6 +282,10 @@ static const struct shell_command_list_entry_st shell_commands[] = {
 	{ "HELP",	shellcmd_help	},
 	{ "CD",		shellcmd_cd	},
 	{ "DIR",	shellcmd_dir	},
+	{ "MDUMP",	shellcmd_mdump	},
+	{ "DASM",	shellcmd_dasm	},
+//	{ "GO",		shellcmd_go	},
+	{ "VER",	shellcmd_ver	},
 	{ NULL,		NULL		}
 };
 
@@ -213,7 +314,7 @@ static int shellcmd_help ( const char **tokens, int num_tokens, const char *orig
 			if (topic_size >= sizeof(topic))
 				topic_size = sizeof(topic) - 1;
 			strcapitalize(topic, tokens[0], topic_size);
-			printf("Got joker search: \"%s\" [size=%d]\n", topic, topic_size);
+			//printf("Got joker search: \"%s\" [size=%d]\n", topic, topic_size);
 			do {
 				p = strstr(p, "\n#");
 				if (p && p[2] != '\n' && p[2] != '#' && p[2]) {
@@ -225,12 +326,16 @@ static int shellcmd_help ( const char **tokens, int num_tokens, const char *orig
 							nl = NULL;
 					}
 					if (nl) {
+						int align = 10;
 						items++;
-						while (p <= nl)
+						while (p < nl) {
 							putchar(*p++);
+							align--;
+						}
 						while (*p && *p == '\n')
 							p++;
-						printf("    ");
+						while (align-- > 0)
+							putchar(' ');
 						while (*p && *p != '\n')
 							putchar(*p++);
 						putchar('\n');
@@ -238,7 +343,7 @@ static int shellcmd_help ( const char **tokens, int num_tokens, const char *orig
 				}
 			} while (p);
 			if (!items) {
-				printf("No topics found matching your pattern '%s'\n", topic);
+				printf("No topic found matching your pattern '%s'\n", topic);
 				return 1;
 			}
 			return 0;
@@ -258,8 +363,19 @@ static int shellcmd_help ( const char **tokens, int num_tokens, const char *orig
 			}
 			printf("=== reCPM manual >>> ");
 			p += 2;
-			while (*p && !(p[0] == '\n' && p[1] == '#' && p[2] != '#'))
-				putchar(*p++);
+			int lines = 0;
+			while (*p && !(p[0] == '\n' && p[1] == '#' && p[2] != '#')) {
+				putchar(*p);
+				if (*p == '\n') {
+					lines++;
+					if (lines == 22) {
+						if (stdin_is_tty && stdout_is_tty)
+							printf("---- NEW PAGE ----\n");	// TODO: implement pager.
+						lines = 0;
+					}
+				}
+				p++;
+			}
 			if (p[-1] != '\n')
 				putchar('\n');
 			return 0;
@@ -355,46 +471,15 @@ static char* shell_readline_interactive ( void )
 
 
 
-static void show_version ( void )
-{
-#ifndef _WIN32
-	struct utsname uts;
-	uname(&uts);
-	printf("reCPM " DATECODE " on %s %s %s \"%s\"\n",
-		uts.sysname, uts.release, uts.machine, uts.nodename
-	);
-#else
-	DWORD winver = GetVersion();
-	char nodename[100];
-	DWORD nodesize = sizeof(nodename) - 1;
-	printf("reCPM v%s on Windows %d.%d #%d %s \"%s\"\n",
-		DATECODE,
-		LOBYTE(LOWORD(winver)),
-		HIBYTE(LOWORD(winver)),
-		(winver < 0x80000000) ? HIWORD(winver) : 0,
-#ifdef _WIN64
-		"x86_64",
-#else
-		"x86_32",
-#endif
-		GetComputerName(nodename, &nodesize) ? "unknown-host" : nodename
-	);
-	//IsWow64Process
-#endif
-	printf("CP/M desired compatibility level v2.2\n");
-}
-
-
-
 int console_title ( const char *name )
 {
-#ifdef _WIN32
 	char title_str[strlen(name) + 40];
-	sprintf(title_str,"reCPM ~ %s", name);
+	sprintf(title_str,"re-CP/M ~ %s", name);
+#ifdef _WIN32
 	SetConsoleTitle(title_str);
 #else
-	if (isatty(1) == 1) {
-		printf("\033]0;reCPM ~ %s\007", name);
+	if (stdout_is_tty) {
+		printf("\033]0;%s\007", title_str);
 	}
 #endif
 	return 0;
@@ -405,19 +490,22 @@ int console_title ( const char *name )
 int console_init ( void )
 {
 #ifdef _WIN32
+	//FreeConsole();
 	AllocConsole();
 	SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
 	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
-	console_title("????");
+	stdin_is_tty = 1;
+	stdout_is_tty = 1;
 #else
 	if (isatty(0) == 1) {
 		char *tty = ttyname(0);
-		printf("Running on console for STDIN: %s\n", tty);
+		DEBUG("Running on console for STDIN: %s\n", tty);
+		stdin_is_tty = 1;
 	}
 	if (isatty(1) == 1) {
 		char *tty = ttyname(1);
-		console_title("????");
-		printf("Running on console for STDOUT: %s\n", tty);
+		DEBUG("Running on console for STDOUT: %s\n", tty);
+		stdout_is_tty = 1;
 	}
 #endif
 	return 0;

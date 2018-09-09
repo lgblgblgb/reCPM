@@ -194,7 +194,7 @@ int CPMPRG_STOP ( int code, const char *format, ... )
 }
 
 
-void cpm_memory_initialize ( void )
+void cpmprg_memory_initialize ( void )
 {
 	memset(memory, 0, sizeof memory);
 	/* create jump table for CBIOS emulation, actually they're CPU traps, and RET! */
@@ -243,7 +243,7 @@ int cpmprg_prepare_psp ( int argc, char **argv )
 
 int cpmprg_load ( const char *hostospath, int argc, char **argv )
 {
-	cpm_memory_initialize();
+	cpmprg_memory_initialize();
 	int fd = open(hostospath, O_RDONLY | O_BINARY);
 	if (fd < 0)
 		return CPMPRG_STOP(1, "Cannot open program file: %s: %s", hostospath, strerror(errno));

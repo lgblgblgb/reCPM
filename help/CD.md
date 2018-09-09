@@ -1,4 +1,4 @@
-#CD
+# CD
 Host-OS directory change/query, CP/M drive to host-OS directory mapping tool
 
     CD           List drive assignments
